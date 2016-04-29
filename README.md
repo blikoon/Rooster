@@ -14,4 +14,7 @@ Simple android smack xmpp chat client source to show the usage of smack.
 ##Screenshot
 ![screenshots](http://www.blikoon.com/wp-content/uploads/2016/04/rooster_full_chat_processed.png)
 
+## More
+here:http://www.blikoon.com/tutorials/android-smack-xmpp-introductionbuilding-a-simple-client
+
 
