@@ -1,6 +1,5 @@
 # Rooster
 Simple android smack xmpp chat client source to show the usage of smack.
-![screenshots](http://www.blikoon.com/wp-content/uploads/2016/04/rooster_full_chat_processed.png)
 
 ## Supports
 
@@ -11,3 +10,8 @@ Simple android smack xmpp chat client source to show the usage of smack.
 ## Building
 
 * Simply open the project in Android Studio and run the app.
+
+##ScreenShots
+![screenshots](http://www.blikoon.com/wp-content/uploads/2016/04/rooster_full_chat_processed.png)
+
+
