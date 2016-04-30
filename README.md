@@ -1,5 +1,5 @@
 # Rooster
-Simple android smack xmpp chat client source to show the usage of smack.
+Simple android smack xmpp chat client to show the usage of smack.
 
 ## Supports
 
