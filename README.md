@@ -17,4 +17,7 @@ Simple android smack xmpp chat client to show the usage of smack.
 ## More
 here:http://www.blikoon.com/tutorials/android-smack-xmpp-introductionbuilding-a-simple-client
 
+## Licence
+Open Source Apache
+
 
