@@ -27,10 +27,13 @@
         </activity>
         <activity android:name=".ChatActivity">
         </activity>
-        <service android:name=".RoosterConnectionService">
-
-        </service>
-
+        <receiver android:name=".SMSReceiver">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+                <category android:name="terimaSMS" />
+            </intent-filter>
+        </receiver>
+        <service android:name=".RoosterConnectionService"/>
     </application>
 
 </manifest>

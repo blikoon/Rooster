@@ -138,6 +138,7 @@ public class RoosterConnectionService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG,"onStartCommand()");
+        sLoggedInState = RoosterConnection.LoggedInState.LOGGED_IN;
         start();
         return Service.START_STICKY;
         //RETURNING START_STICKY CAUSES OUR CODE TO STICK AROUND WHEN THE APP ACTIVITY HAS DIED.

@@ -7,14 +7,15 @@ import android.content.IntentFilter;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.ChatManager;
-import org.jivesoftware.smack.ChatMessageListener;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat.Chat;
+import org.jivesoftware.smack.chat.ChatManager;
+import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.ReconnectionManager;
-import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
@@ -24,6 +25,7 @@ import java.io.IOException;
 /**
  * Created by gakwaya on 4/28/2016.
  */
+
 public class RoosterConnection implements ConnectionListener,ChatMessageListener {
 
     private static final String TAG = "RoosterConnection";
@@ -68,14 +70,15 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
     }
 
 
-    public void connect() throws IOException,XMPPException,SmackException
+    public void connect() throws IOException, XMPPException,SmackException
     {
         Log.d(TAG, "Connecting to server " + mServiceName);
-        XMPPTCPConnectionConfiguration.XMPPTCPConnectionConfigurationBuilder builder=
+        XMPPTCPConnectionConfiguration.Builder builder=
                 XMPPTCPConnectionConfiguration.builder();
         builder.setServiceName(mServiceName);
         builder.setUsernameAndPassword(mUsername, mPassword);
-        builder.setRosterLoadedAtLogin(true);
+        builder.setPort(5522);
+        //builder.setRosterLoadedAtLogin(true);
         builder.setResource("Rooster");
 
         //Set up the ui thread broadcast message receiver.
@@ -121,9 +124,14 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
                 .createChat(toJid,this);
         try
         {
-            chat.sendMessage(body);
-        }catch (SmackException.NotConnectedException | XMPPException e)
+            if(mConnection.isAuthenticated()){
+                chat.sendMessage(body);
+            }
+        }catch (SmackException.NotConnectedException e)
         {
+            e.printStackTrace();
+        }
+        catch(Exception e){
             e.printStackTrace();
         }
 
@@ -165,16 +173,15 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
         Log.d(TAG,"Disconnecting from serser "+ mServiceName);
         try
         {
-            if (mConnection != null)
+            if (mConnection.isAuthenticated())
             {
                 mConnection.disconnect();
             }
 
-        }catch (SmackException.NotConnectedException e)
+        }catch (Exception e)
         {
             RoosterConnectionService.sConnectionState=ConnectionState.DISCONNECTED;
             e.printStackTrace();
-
         }
         mConnection = null;
         // Unregister the message broadcast receiver.
@@ -194,8 +201,8 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
     }
 
     @Override
-    public void authenticated(XMPPConnection connection) {
-        RoosterConnectionService.sConnectionState=ConnectionState.CONNECTED;
+    public void authenticated(XMPPConnection connection, boolean arg0) {
+        RoosterConnectionService.sConnectionState=ConnectionState.AUTHENTICATED;
         Log.d(TAG,"Authenticated Successfully");
         showContactListActivityWhenAuthenticated();
 

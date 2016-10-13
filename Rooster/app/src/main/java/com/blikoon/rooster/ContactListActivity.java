@@ -30,7 +30,7 @@ public class ContactListActivity extends AppCompatActivity {
 
         ContactModel model = ContactModel.get(getBaseContext());
         List<Contact> contacts = model.getContacts();
-
+        Log.d("status Login : ",RoosterConnection.LoggedInState.LOGGED_IN.toString());
         mAdapter = new ContactAdapter(contacts);
         contactsRecyclerView.setAdapter(mAdapter);
     }
