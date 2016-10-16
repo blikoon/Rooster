@@ -111,6 +111,5 @@ public class ChatActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter(RoosterConnectionService.NEW_MESSAGE);
         registerReceiver(mBroadcastReceiver,filter);
 
-
     }
 }

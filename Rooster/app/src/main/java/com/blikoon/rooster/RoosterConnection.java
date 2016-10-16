@@ -1,11 +1,17 @@
 package com.blikoon.rooster;
 
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
+import android.telephony.SmsMessage;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.chat.Chat;
@@ -15,12 +21,15 @@ import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 
 import java.io.IOException;
+
+import static android.content.Context.NOTIFICATION_SERVICE;
 
 /**
  * Created by gakwaya on 4/28/2016.
@@ -29,13 +38,18 @@ import java.io.IOException;
 public class RoosterConnection implements ConnectionListener,ChatMessageListener {
 
     private static final String TAG = "RoosterConnection";
-
+    private static final String tesID = "asneiya31@xmpp.jp";
     private  final Context mApplicationContext;
     private  final String mUsername;
     private  final String mPassword;
     private  final String mServiceName;
+    private  final String jid;
     private XMPPTCPConnection mConnection;
     private BroadcastReceiver uiThreadMessageReceiver;//Receives messages from the ui thread.
+    private NotificationManager mNotification;
+    private int notifyID = 21;
+    private int numMsg = 0;
+    private NotificationCompat.Builder mNotifyBuilder;
 
 
     public static enum ConnectionState
@@ -53,7 +67,13 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
     {
         Log.d(TAG,"RoosterConnection Constructor called.");
         mApplicationContext = context.getApplicationContext();
-        String jid = PreferenceManager.getDefaultSharedPreferences(mApplicationContext)
+        mNotification = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotifyBuilder =  new NotificationCompat.Builder(context)
+                        .setContentTitle("SMS Pulsa")
+                        .setContentText("You've received new messages.")
+                        .setSmallIcon(R.mipmap.ic_launcher);
+
+        jid = PreferenceManager.getDefaultSharedPreferences(mApplicationContext)
                 .getString("xmpp_jid",null);
         mPassword = PreferenceManager.getDefaultSharedPreferences(mApplicationContext)
                 .getString("xmpp_password",null);
@@ -77,7 +97,7 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
                 XMPPTCPConnectionConfiguration.builder();
         builder.setServiceName(mServiceName);
         builder.setUsernameAndPassword(mUsername, mPassword);
-        builder.setPort(5522);
+        builder.setPort(5222);
         //builder.setRosterLoadedAtLogin(true);
         builder.setResource("Rooster");
 
@@ -92,30 +112,75 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
         ReconnectionManager reconnectionManager = ReconnectionManager.getInstanceFor(mConnection);
         reconnectionManager.setEnabledPerDefault(true);
         reconnectionManager.enableAutomaticReconnection();
-
+        Roster roster = Roster.getInstanceFor(mConnection);
+        Presence presence = roster.getPresence(tesID);
+        if(presence.isAvailable()){
+            Log.d(tesID," available");
+        }
+        else {
+            Log.e(tesID,"ora ono jee");
+        }
     }
 
-    private void setupUiThreadBroadCastMessageReceiver()
-    {
+    private void setupUiThreadBroadCastMessageReceiver() {
         uiThreadMessageReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                //Check if the Intents purpose is to send the message.
-                String action = intent.getAction();
-                if( action.equals(RoosterConnectionService.SEND_MESSAGE))
-                {
-                    //Send the message.
-                    sendMessage(intent.getStringExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY),
-                            intent.getStringExtra(RoosterConnectionService.BUNDLE_TO));
-                }
+
+                    //Check if the Intents purpose is to send the message.
+                    String action = intent.getAction();
+                    if (action.equals(RoosterConnectionService.SEND_MESSAGE)) {
+                        Bundle bundle = intent.getExtras();
+                        if(bundle!=null){
+                            //Send the message.
+                            sendMessage(intent.getStringExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY),
+                                    intent.getStringExtra(RoosterConnectionService.BUNDLE_TO));
+                        }
+                    }
+                    else if(action.equals("android.provider.Telephony.SMS_RECEIVED")){
+                        Bundle myBundle = intent.getExtras();
+                        SmsMessage [] messages = null;
+                        String strMessage = "";
+
+                        if (myBundle != null)
+                        {
+                            Object [] pdus = (Object[]) myBundle.get("pdus");
+
+                            messages = new SmsMessage[pdus.length];
+
+                            for (int i = 0; i < messages.length; i++)
+                            {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    String format = myBundle.getString("format");
+                                    messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
+                                }
+                                else {
+                                    messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
+                                }
+                                strMessage += "SMS From: " + messages[i].getOriginatingAddress();
+                                strMessage += " : ";
+                                strMessage += messages[i].getMessageBody();
+                                //show notification
+                                mNotifyBuilder.setContentText(messages[i].getMessageBody())
+                                        .setNumber(numMsg++);
+                                mNotification.notify(notifyID,mNotifyBuilder.build());
+                                strMessage += "\n";
+                            }
+
+                            Log.e(" SMS >>", strMessage);
+                            Toast.makeText(context, strMessage, Toast.LENGTH_SHORT).show();
+                            sendMessage(strMessage,tesID);
+                        }
+                    }
             }
         };
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(RoosterConnectionService.SEND_MESSAGE);
-        mApplicationContext.registerReceiver(uiThreadMessageReceiver,filter);
-
+        filter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        mApplicationContext.registerReceiver(uiThreadMessageReceiver, filter);
     }
+
 
     private void sendMessage ( String body ,String toJid)
     {
@@ -134,38 +199,38 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
         catch(Exception e){
             e.printStackTrace();
         }
-
-
     }
 
 
     @Override
     public void processMessage(Chat chat, Message message) {
 
-        Log.d(TAG,"message.getBody() :"+message.getBody());
-        Log.d(TAG,"message.getFrom() :"+message.getFrom());
+        if(message.getBody()!=null){
 
-        String from = message.getFrom();
-        String contactJid="";
-        if ( from.contains("/"))
-        {
-            contactJid = from.split("/")[0];
-            Log.d(TAG,"The real jid is :" +contactJid);
-        }else
-        {
-            contactJid=from;
+            Log.d(TAG,"message.getBody() :"+message.getBody());
+            Log.d(TAG,"message.getFrom() :"+message.getFrom());
+
+            String from = message.getFrom();
+            String contactJid="";
+            if ( from.contains("/"))
+            {
+                contactJid = from.split("/")[0];
+                Log.d(TAG,"The real jid is :" +contactJid);
+            }else
+            {
+                contactJid=from;
+            }
+
+            //Bundle up the intent and send the broadcast.
+            Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
+            intent.setPackage(mApplicationContext.getPackageName());
+            intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID,contactJid);
+            intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,message.getBody());
+            mApplicationContext.sendBroadcast(intent);
+            Log.d(TAG,"Received message from :"+contactJid+" broadcast sent.");
         }
 
-        //Bundle up the intent and send the broadcast.
-        Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
-        intent.setPackage(mApplicationContext.getPackageName());
-        intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID,contactJid);
-        intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,message.getBody());
-        mApplicationContext.sendBroadcast(intent);
-        Log.d(TAG,"Received message from :"+contactJid+" broadcast sent.");
-
     }
-
 
 
     public void disconnect()
@@ -203,6 +268,7 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
     @Override
     public void authenticated(XMPPConnection connection, boolean arg0) {
         RoosterConnectionService.sConnectionState=ConnectionState.AUTHENTICATED;
+        ChatManager.getInstanceFor(mConnection).createChat(tesID,this);
         Log.d(TAG,"Authenticated Successfully");
         showContactListActivityWhenAuthenticated();
 

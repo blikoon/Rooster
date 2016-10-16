@@ -62,6 +62,7 @@ public class LoginActivity extends AppCompatActivity
             finish();
         }
         mJidView = (AutoCompleteTextView) findViewById(R.id.email);
+        mJidView.setText("neobyte@xmpp.jp");
         populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);

@@ -7,10 +7,23 @@
     <TextView
         android:id="@+id/contact_jid"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="50dp"
         android:gravity="center"
         android:text="user@example.com"
-        android:textSize="35dp"/>
+        android:textSize="30dp"
+        android:textColor="@color/black"/>
+
+        <CheckBox
+            android:text="Auto Send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity=""
+            android:id="@+id/checkBox" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        android:layout_margin="4dp"/>
 
 
 </LinearLayout>
