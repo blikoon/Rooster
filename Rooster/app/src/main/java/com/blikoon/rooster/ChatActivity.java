@@ -48,8 +48,8 @@ public class ChatActivity extends AppCompatActivity {
                 //Only send the message if the client is connected
                 //to the server.
 
-                if (RoosterConnectionService.getState().equals(RoosterConnection.ConnectionState.CONNECTED)) {
-                    Log.d(TAG, "The client is connected to the server,Sendint Message");
+                if (RoosterConnectionService.getState().equals(RoosterConnection.ConnectionState.AUTHENTICATED)) {
+                    Log.d(TAG, "The client is connected to the server, Sending Message");
                     //Send the message to the server
 
                     Intent intent = new Intent(RoosterConnectionService.SEND_MESSAGE);
@@ -63,7 +63,7 @@ public class ChatActivity extends AppCompatActivity {
                     mChatView.sendMessage();
                 } else {
                     Toast.makeText(getApplicationContext(),
-                            "Client not connected to server ,Message not sent!",
+                            "Client not connected to server, Message not sent!",
                             Toast.LENGTH_LONG).show();
                 }
             }
@@ -110,7 +110,6 @@ public class ChatActivity extends AppCompatActivity {
 
         IntentFilter filter = new IntentFilter(RoosterConnectionService.NEW_MESSAGE);
         registerReceiver(mBroadcastReceiver,filter);
-
 
     }
 }

@@ -27,6 +27,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import static android.Manifest.permission.READ_CONTACTS;
+import static com.blikoon.rooster.RoosterConnectionService.getLoggedInState;
 
 /**
  * A login screen that offers login via jid/password.
@@ -55,7 +56,13 @@ public class LoginActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
+        if(RoosterConnectionService.getLoggedInState().equals(RoosterConnection.LoggedInState.LOGGED_IN)){
+            Intent i = new Intent(getApplicationContext(),ContactListActivity.class);
+            startActivity(i);
+            finish();
+        }
         mJidView = (AutoCompleteTextView) findViewById(R.id.email);
+        mJidView.setText("neobyte@xmpp.jp");
         populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
@@ -202,7 +209,7 @@ public class LoginActivity extends AppCompatActivity
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            //showProgress(true);
+            showProgress(true);
             //This is where the login login is fired up.
 //            Log.d(TAG,"Jid and password are valid ,proceeding with login.");
 //            startActivity(new Intent(this,ContactListActivity.class));
@@ -221,12 +228,11 @@ public class LoginActivity extends AppCompatActivity
                 .putString("xmpp_jid", mJidView.getText().toString())
                 .putString("xmpp_password", mPasswordView.getText().toString())
                 .putBoolean("xmpp_logged_in",true)
-                .commit();
+                .apply();
 
         //Start the service
         Intent i1 = new Intent(this,RoosterConnectionService.class);
         startService(i1);
-
     }
 
     private boolean isEmailValid(String email) {
