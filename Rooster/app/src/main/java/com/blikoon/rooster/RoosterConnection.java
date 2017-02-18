@@ -9,6 +9,7 @@ import android.util.Log;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.ChatMessageListener;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.ReconnectionManager;
@@ -24,7 +25,7 @@ import java.io.IOException;
 /**
  * Created by gakwaya on 4/28/2016.
  */
-public class RoosterConnection implements ConnectionListener,ChatMessageListener {
+public class RoosterConnection implements ConnectionListener {
 
     private static final String TAG = "RoosterConnection";
 
@@ -34,6 +35,7 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
     private  final String mServiceName;
     private XMPPTCPConnection mConnection;
     private BroadcastReceiver uiThreadMessageReceiver;//Receives messages from the ui thread.
+    private  ChatMessageListener messageListener;
 
 
     public static enum ConnectionState
@@ -86,6 +88,47 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
         mConnection.connect();
         mConnection.login();
 
+        messageListener = new ChatMessageListener() {
+            @Override
+            public void processMessage(Chat chat, Message message) {
+                ///ADDED
+                        Log.d(TAG,"message.getBody() :"+message.getBody());
+                        Log.d(TAG,"message.getFrom() :"+message.getFrom());
+
+                        String from = message.getFrom();
+                        String contactJid="";
+                        if ( from.contains("/"))
+                        {
+                            contactJid = from.split("/")[0];
+                            Log.d(TAG,"The real jid is :" +contactJid);
+                        }else
+                        {
+                            contactJid=from;
+                        }
+
+                        //Bundle up the intent and send the broadcast.
+                        Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
+                        intent.setPackage(mApplicationContext.getPackageName());
+                        intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID,contactJid);
+                        intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,message.getBody());
+                        mApplicationContext.sendBroadcast(intent);
+                        Log.d(TAG,"Received message from :"+contactJid+" broadcast sent.");
+                        ///ADDED
+
+            }
+        };
+
+        //The snippet below is necessary for the message listener to be attached to our connection.
+        ChatManager.getInstanceFor(mConnection).addChatListener(new ChatManagerListener() {
+            @Override
+            public void chatCreated(Chat chat, boolean createdLocally) {
+
+                //If the line below is missing ,processMessage won't be triggered and you won't receive messages.
+                chat.addMessageListener(messageListener);
+
+            }
+        });
+
         ReconnectionManager reconnectionManager = ReconnectionManager.getInstanceFor(mConnection);
         reconnectionManager.setEnabledPerDefault(true);
         reconnectionManager.enableAutomaticReconnection();
@@ -118,7 +161,7 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
     {
         Log.d(TAG,"Sending message to :"+ toJid);
         Chat chat = ChatManager.getInstanceFor(mConnection)
-                .createChat(toJid,this);
+                .createChat(toJid,messageListener);
         try
         {
             chat.sendMessage(body);
@@ -129,35 +172,6 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
 
 
     }
-
-
-    @Override
-    public void processMessage(Chat chat, Message message) {
-
-        Log.d(TAG,"message.getBody() :"+message.getBody());
-        Log.d(TAG,"message.getFrom() :"+message.getFrom());
-
-        String from = message.getFrom();
-        String contactJid="";
-        if ( from.contains("/"))
-        {
-            contactJid = from.split("/")[0];
-            Log.d(TAG,"The real jid is :" +contactJid);
-        }else
-        {
-            contactJid=from;
-        }
-
-        //Bundle up the intent and send the broadcast.
-        Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
-        intent.setPackage(mApplicationContext.getPackageName());
-        intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID,contactJid);
-        intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,message.getBody());
-        mApplicationContext.sendBroadcast(intent);
-        Log.d(TAG,"Received message from :"+contactJid+" broadcast sent.");
-
-    }
-
 
 
     public void disconnect()
@@ -191,6 +205,7 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
     public void connected(XMPPConnection connection) {
         RoosterConnectionService.sConnectionState=ConnectionState.CONNECTED;
         Log.d(TAG,"Connected Successfully");
+
     }
 
     @Override
@@ -198,6 +213,8 @@ public class RoosterConnection implements ConnectionListener,ChatMessageListener
         RoosterConnectionService.sConnectionState=ConnectionState.CONNECTED;
         Log.d(TAG,"Authenticated Successfully");
         showContactListActivityWhenAuthenticated();
+
+
 
     }
 
