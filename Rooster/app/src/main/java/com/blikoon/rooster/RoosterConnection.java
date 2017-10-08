@@ -7,23 +7,28 @@ import android.content.IntentFilter;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.ChatManager;
-import org.jivesoftware.smack.ChatManagerListener;
-import org.jivesoftware.smack.ChatMessageListener;
+import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+
+import org.jivesoftware.smack.chat.ChatMessageListener;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.ChatManager;
+import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.IOException;
 
 /**
- * Created by gakwaya on 4/28/2016.
+ * Updated by gakwaya on Oct/08/2017.
  */
 public class RoosterConnection implements ConnectionListener {
 
@@ -73,61 +78,113 @@ public class RoosterConnection implements ConnectionListener {
     public void connect() throws IOException,XMPPException,SmackException
     {
         Log.d(TAG, "Connecting to server " + mServiceName);
-        XMPPTCPConnectionConfiguration.XMPPTCPConnectionConfigurationBuilder builder=
-                XMPPTCPConnectionConfiguration.builder();
-        builder.setServiceName(mServiceName);
-        builder.setUsernameAndPassword(mUsername, mPassword);
-        builder.setRosterLoadedAtLogin(true);
-        builder.setResource("Rooster");
+
+        XMPPTCPConnectionConfiguration conf = XMPPTCPConnectionConfiguration.builder()
+                .setXmppDomain(mServiceName)
+                .setHost("salama.im")
+                .setResource("Rooster")
+
+                //Was facing this issue
+                //https://discourse.igniterealtime.org/t/connection-with-ssl-fails-with-java-security-keystoreexception-jks-not-found/62566
+                .setKeystoreType(null) //This line seems to get rid of the problem
+
+                .setSecurityMode(ConnectionConfiguration.SecurityMode.required)
+                .setCompressionEnabled(true).build();
+
+        Log.d(TAG, "Username : "+mUsername);
+        Log.d(TAG, "Password : "+mPassword);
+        Log.d(TAG, "Server : "+mServiceName);
+
 
         //Set up the ui thread broadcast message receiver.
         setupUiThreadBroadCastMessageReceiver();
 
-        mConnection = new XMPPTCPConnection(builder.build());
+        mConnection = new XMPPTCPConnection(conf);
         mConnection.addConnectionListener(this);
-        mConnection.connect();
-        mConnection.login();
+        try {
+            Log.d(TAG, "Calling connect() ");
+            mConnection.connect();
+            mConnection.login(mUsername,mPassword);
+            Log.d(TAG, " login() Called ");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
 
         messageListener = new ChatMessageListener() {
             @Override
-            public void processMessage(Chat chat, Message message) {
+            public void processMessage(org.jivesoftware.smack.chat.Chat chat, Message message) {
+
                 ///ADDED
-                        Log.d(TAG,"message.getBody() :"+message.getBody());
-                        Log.d(TAG,"message.getFrom() :"+message.getFrom());
+                Log.d(TAG,"message.getBody() :"+message.getBody());
+                Log.d(TAG,"message.getFrom() :"+message.getFrom());
 
-                        String from = message.getFrom();
-                        String contactJid="";
-                        if ( from.contains("/"))
-                        {
-                            contactJid = from.split("/")[0];
-                            Log.d(TAG,"The real jid is :" +contactJid);
-                        }else
-                        {
-                            contactJid=from;
-                        }
+                String from = message.getFrom().toString();
 
-                        //Bundle up the intent and send the broadcast.
-                        Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
-                        intent.setPackage(mApplicationContext.getPackageName());
-                        intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID,contactJid);
-                        intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,message.getBody());
-                        mApplicationContext.sendBroadcast(intent);
-                        Log.d(TAG,"Received message from :"+contactJid+" broadcast sent.");
-                        ///ADDED
+                String contactJid="";
+                if ( from.contains("/"))
+                {
+                    contactJid = from.split("/")[0];
+                    Log.d(TAG,"The real jid is :" +contactJid);
+                    Log.d(TAG,"The message is from :" +from);
+                }else
+                {
+                    contactJid=from;
+                }
+
+                //Bundle up the intent and send the broadcast.
+                Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
+                intent.setPackage(mApplicationContext.getPackageName());
+                intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID,contactJid);
+                intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,message.getBody());
+                mApplicationContext.sendBroadcast(intent);
+                Log.d(TAG,"Received message from :"+contactJid+" broadcast sent.");
+                ///ADDED
+
 
             }
+
+
         };
 
-        //The snippet below is necessary for the message listener to be attached to our connection.
-        ChatManager.getInstanceFor(mConnection).addChatListener(new ChatManagerListener() {
-            @Override
-            public void chatCreated(Chat chat, boolean createdLocally) {
 
-                //If the line below is missing ,processMessage won't be triggered and you won't receive messages.
-                chat.addMessageListener(messageListener);
+
+
+        ChatManager.getInstanceFor(mConnection).addIncomingListener(new IncomingChatMessageListener() {
+            @Override
+            public void newIncomingMessage(EntityBareJid messageFrom, Message message, Chat chat) {
+
+                ///ADDED
+                Log.d(TAG,"message.getBody() :"+message.getBody());
+                Log.d(TAG,"message.getFrom() :"+message.getFrom());
+
+                String from = message.getFrom().toString();
+
+                String contactJid="";
+                if ( from.contains("/"))
+                {
+                    contactJid = from.split("/")[0];
+                    Log.d(TAG,"The real jid is :" +contactJid);
+                    Log.d(TAG,"The message is from :" +from);
+                }else
+                {
+                    contactJid=from;
+                }
+
+                //Bundle up the intent and send the broadcast.
+                Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
+                intent.setPackage(mApplicationContext.getPackageName());
+                intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID,contactJid);
+                intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,message.getBody());
+                mApplicationContext.sendBroadcast(intent);
+                Log.d(TAG,"Received message from :"+contactJid+" broadcast sent.");
+                ///ADDED
 
             }
         });
+
+
+
 
         ReconnectionManager reconnectionManager = ReconnectionManager.getInstanceFor(mConnection);
         reconnectionManager.setEnabledPerDefault(true);
@@ -160,13 +217,26 @@ public class RoosterConnection implements ConnectionListener {
     private void sendMessage ( String body ,String toJid)
     {
         Log.d(TAG,"Sending message to :"+ toJid);
-        Chat chat = ChatManager.getInstanceFor(mConnection)
-                .createChat(toJid,messageListener);
-        try
-        {
-            chat.sendMessage(body);
-        }catch (SmackException.NotConnectedException | XMPPException e)
-        {
+
+        EntityBareJid jid = null;
+
+
+        ChatManager chatManager = ChatManager.getInstanceFor(mConnection);
+
+        try {
+            jid = JidCreate.entityBareFrom(toJid);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
+        Chat chat = chatManager.chatWith(jid);
+        try {
+            Message message = new Message(jid, Message.Type.chat);
+            message.setBody(body);
+            chat.send(message);
+
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
@@ -177,19 +247,12 @@ public class RoosterConnection implements ConnectionListener {
     public void disconnect()
     {
         Log.d(TAG,"Disconnecting from serser "+ mServiceName);
-        try
-        {
-            if (mConnection != null)
-            {
-                mConnection.disconnect();
-            }
 
-        }catch (SmackException.NotConnectedException e)
+        if (mConnection != null)
         {
-            RoosterConnectionService.sConnectionState=ConnectionState.DISCONNECTED;
-            e.printStackTrace();
-
+            mConnection.disconnect();
         }
+
         mConnection = null;
         // Unregister the message broadcast receiver.
         if( uiThreadMessageReceiver != null)
@@ -209,14 +272,12 @@ public class RoosterConnection implements ConnectionListener {
     }
 
     @Override
-    public void authenticated(XMPPConnection connection) {
+    public void authenticated(XMPPConnection connection, boolean resumed) {
         RoosterConnectionService.sConnectionState=ConnectionState.CONNECTED;
         Log.d(TAG,"Authenticated Successfully");
         showContactListActivityWhenAuthenticated();
-
-
-
     }
+
 
     @Override
     public void connectionClosed() {
