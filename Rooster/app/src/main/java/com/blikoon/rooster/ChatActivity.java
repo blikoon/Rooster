@@ -7,12 +7,11 @@ import android.content.IntentFilter;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
-import co.devcenter.androiduilibrary.ChatView;
-import co.devcenter.androiduilibrary.ChatViewEventListener;
-import co.devcenter.androiduilibrary.SendButton;
+
+import co.intentservice.chatui.ChatView;
+import co.intentservice.chatui.models.ChatMessage;
 
 
 public class ChatActivity extends AppCompatActivity {
@@ -20,7 +19,6 @@ public class ChatActivity extends AppCompatActivity {
 
     private String contactJid;
     private ChatView mChatView;
-    private SendButton mSendButton;
     private BroadcastReceiver mBroadcastReceiver;
 
     @Override
@@ -28,46 +26,44 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         mChatView =(ChatView) findViewById(R.id.rooster_chat_view);
-        mChatView.setEventListener(new ChatViewEventListener() {
+
+        mChatView.setOnSentMessageListener(new ChatView.OnSentMessageListener(){
             @Override
-            public void userIsTyping() {
-                //Here you know that the user is typing
-            }
-
-            @Override
-            public void userHasStoppedTyping() {
-                //Here you know that the user has stopped typing.
-            }
-        });
-
-        mSendButton = mChatView.getSendButton();
-        mSendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                //Only send the message if the client is connected
-                //to the server.
-
+            public boolean sendMessage(ChatMessage chatMessage){
+                // perform actual message sending
                 if (RoosterConnectionService.getState().equals(RoosterConnection.ConnectionState.CONNECTED)) {
                     Log.d(TAG, "The client is connected to the server,Sendint Message");
                     //Send the message to the server
 
                     Intent intent = new Intent(RoosterConnectionService.SEND_MESSAGE);
                     intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,
-                            mChatView.getTypedString());
+                            mChatView.getTypedMessage());
                     intent.putExtra(RoosterConnectionService.BUNDLE_TO, contactJid);
 
                     sendBroadcast(intent);
 
-                    //Update the chat view.
-                    mChatView.sendMessage();
                 } else {
                     Toast.makeText(getApplicationContext(),
                             "Client not connected to server ,Message not sent!",
                             Toast.LENGTH_LONG).show();
                 }
+                //message sending ends here
+                return true;
             }
         });
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         Intent intent = getIntent();
         contactJid = intent.getStringExtra("EXTRA_CONTACT_JID");
@@ -95,7 +91,8 @@ public class ChatActivity extends AppCompatActivity {
 
                         if ( from.equals(contactJid))
                         {
-                            mChatView.receiveMessage(body);
+                            ChatMessage chatMessage = new ChatMessage(body,System.currentTimeMillis(), ChatMessage.Type.RECEIVED);
+                            mChatView.addMessage(chatMessage);
 
                         }else
                         {
