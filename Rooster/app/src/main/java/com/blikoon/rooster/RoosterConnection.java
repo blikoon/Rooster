@@ -40,7 +40,6 @@ public class RoosterConnection implements ConnectionListener {
     private  final String mServiceName;
     private XMPPTCPConnection mConnection;
     private BroadcastReceiver uiThreadMessageReceiver;//Receives messages from the ui thread.
-    private  ChatMessageListener messageListener;
 
 
     public static enum ConnectionState
@@ -110,50 +109,9 @@ public class RoosterConnection implements ConnectionListener {
             e.printStackTrace();
         }
 
-
-        messageListener = new ChatMessageListener() {
-            @Override
-            public void processMessage(org.jivesoftware.smack.chat.Chat chat, Message message) {
-
-                ///ADDED
-                Log.d(TAG,"message.getBody() :"+message.getBody());
-                Log.d(TAG,"message.getFrom() :"+message.getFrom());
-
-                String from = message.getFrom().toString();
-
-                String contactJid="";
-                if ( from.contains("/"))
-                {
-                    contactJid = from.split("/")[0];
-                    Log.d(TAG,"The real jid is :" +contactJid);
-                    Log.d(TAG,"The message is from :" +from);
-                }else
-                {
-                    contactJid=from;
-                }
-
-                //Bundle up the intent and send the broadcast.
-                Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
-                intent.setPackage(mApplicationContext.getPackageName());
-                intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID,contactJid);
-                intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,message.getBody());
-                mApplicationContext.sendBroadcast(intent);
-                Log.d(TAG,"Received message from :"+contactJid+" broadcast sent.");
-                ///ADDED
-
-
-            }
-
-
-        };
-
-
-
-
         ChatManager.getInstanceFor(mConnection).addIncomingListener(new IncomingChatMessageListener() {
             @Override
             public void newIncomingMessage(EntityBareJid messageFrom, Message message, Chat chat) {
-
                 ///ADDED
                 Log.d(TAG,"message.getBody() :"+message.getBody());
                 Log.d(TAG,"message.getFrom() :"+message.getFrom());
@@ -182,8 +140,6 @@ public class RoosterConnection implements ConnectionListener {
 
             }
         });
-
-
 
 
         ReconnectionManager reconnectionManager = ReconnectionManager.getInstanceFor(mConnection);
