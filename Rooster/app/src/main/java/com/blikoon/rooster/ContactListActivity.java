@@ -7,6 +7,9 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -35,7 +38,33 @@ public class ContactListActivity extends AppCompatActivity {
         contactsRecyclerView.setAdapter(mAdapter);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.contact_list, menu);
+        return true;
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.rooster_logout)
+        {
+            //Disconnect from server
+            Log.d(TAG,"Initiating the log out process");
+            Intent i1 = new Intent(this,RoosterConnectionService.class);
+            stopService(i1);
+
+            //Finish this activity
+            finish();
+
+            //Start login activity for user to login
+            Intent loginIntent = new Intent(this,LoginActivity.class);
+            startActivity(loginIntent);
+
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 
     private class ContactHolder extends RecyclerView.ViewHolder
     {

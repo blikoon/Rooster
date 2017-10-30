@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -203,6 +204,10 @@ public class RoosterConnection implements ConnectionListener {
     public void disconnect()
     {
         Log.d(TAG,"Disconnecting from serser "+ mServiceName);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplicationContext);
+        prefs.edit().putBoolean("xmpp_logged_in",false).commit();
+
 
         if (mConnection != null)
         {
