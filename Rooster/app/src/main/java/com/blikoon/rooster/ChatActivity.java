@@ -32,7 +32,7 @@ public class ChatActivity extends AppCompatActivity {
             public boolean sendMessage(ChatMessage chatMessage){
                 // perform actual message sending
                 if (RoosterConnectionService.getState().equals(RoosterConnection.ConnectionState.CONNECTED)) {
-                    Log.d(TAG, "The client is connected to the server,Sendint Message");
+                    Log.d(TAG, "The client is connected to the server,Sending Message");
                     //Send the message to the server
 
                     Intent intent = new Intent(RoosterConnectionService.SEND_MESSAGE);
