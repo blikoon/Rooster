@@ -24,4 +24,4 @@ here:http://www.blikoontech.com/tutorials/android-smack-xmpp-introductionbuildin
 Open Source Apache
 
 
-[Udemy]: https://www.udemy.com/xmpp-and-smack-fundamentals-the-missing-android-course/
+[Udemy]: https://www.udemy.com/xmpp-and-smack-fundamentals-the-missing-android-course/?couponCode=BLKN_TUTE_KPN_0785
