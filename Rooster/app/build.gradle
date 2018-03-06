@@ -20,7 +20,7 @@ android {
 }
 
 ext {
-    smackVersion = '4.2.1'
+    smackVersion = '4.2.3'
 }
 
 //Ge rid of problem described here : https://stackoverflow.com/questions/31049735/can-not-run-application-below-lollipop

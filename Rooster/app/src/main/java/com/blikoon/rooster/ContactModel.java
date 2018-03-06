@@ -34,7 +34,7 @@ public class ContactModel {
         //Create the Foods and add them to the list;
 
 
-        Contact contact1 = new Contact("shami@salama.im");
+        Contact contact1 = new Contact("gakwaya@salama.im");
         mContacts.add(contact1);
         Contact contact2 = new Contact("User2@server.com");
         mContacts.add(contact2);
