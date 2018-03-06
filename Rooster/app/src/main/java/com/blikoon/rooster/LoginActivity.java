@@ -85,39 +85,6 @@ public class LoginActivity extends AppCompatActivity
         mContext = this;
 
 
-        //Show proper UI based on service[Running|Stopped] and connection state [Connected|Disconnected]
-        //Get logged in state
-        boolean logged_in_state = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-                .getBoolean("xmpp_logged_in",false);
-
-        if(logged_in_state)
-        {
-            if (isServiceRunning(RoosterConnectionService.class)) {
-                Log.d(TAG, "Rooster service already running. Starting contact list activity");
-
-                if(RoosterConnectionService.getState() == RoosterConnection.ConnectionState.DISCONNECTED)
-                {
-                    //Connect to server
-                    //Client should be reconnecting automatically
-                }
-                //Show contact list activity
-            } else
-            {
-                //Keep the login UI in place for the user to login
-                Log.d(TAG, "Rooster service NOT NOT running. Starting Service");
-                //Start the service
-                Intent i1 = new Intent(this,RoosterConnectionService.class);
-                startService(i1);
-
-            }
-
-            //Show the Contact List Activity
-            Intent i2 = new Intent(mContext,ContactListActivity.class);
-            startActivity(i2);
-            finish();
-        }
-
-
     }
 
     @Override

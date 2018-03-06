@@ -36,15 +36,13 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:25.3.1'
     compile 'com.github.rutura:android-chat-ui:v0.1.5'
 
-
-
-
     compile "org.igniterealtime.smack:smack-tcp:$smackVersion"
     compile "org.igniterealtime.smack:smack-experimental:$smackVersion"
-    compile ("org.igniterealtime.smack:smack-android:$smackVersion") {
-        // exclude smack-omemo due to bad packaging
-        exclude module: 'smack-omemo'
-        exclude module: 'smack-omemo-signal'
-    }
+    compile "org.igniterealtime.smack:smack-android:$smackVersion"
+//    compile ("org.igniterealtime.smack:smack-android:$smackVersion") {
+//        // exclude smack-omemo due to bad packaging
+//        exclude module: 'smack-omemo'
+//        exclude module: 'smack-omemo-signal'
+//    }
 
 }
