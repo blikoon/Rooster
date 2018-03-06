@@ -196,8 +196,6 @@ public class RoosterConnection implements ConnectionListener {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-
     }
 
 
