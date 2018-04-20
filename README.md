@@ -11,7 +11,7 @@ Simple android smack xmpp chat client to show the usage of smack.
 
 * Simply open the project in Android Studio and run the app.
 
-## Video Course available on [Udemy]
+## Video Course available on [our online school]
 ![screenshots](http://www.blikoontech.com/wp-content/uploads/2016/04/udemy_live_course_ad.png)
 
 ## Screenshot
@@ -24,4 +24,4 @@ here:http://www.blikoontech.com/tutorials/android-smack-xmpp-introductionbuildin
 Open Source Apache
 
 
-[Udemy]: https://www.udemy.com/xmpp-and-smack-fundamentals-the-missing-android-course/?couponCode=BLKN_TUTE_KPN_0785
+[our online school]: https://blikoon.teachable.com/
