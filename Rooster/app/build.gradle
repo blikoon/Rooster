@@ -20,7 +20,7 @@ android {
 }
 
 ext {
-    smackVersion = '4.2.3'
+    smackVersion = '4.2.4'
     supportLibVersion = '27.1.0'
 }
 
