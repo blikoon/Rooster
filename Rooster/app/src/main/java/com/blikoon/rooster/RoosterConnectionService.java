@@ -5,8 +5,9 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import androidx.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
@@ -17,7 +18,7 @@ import java.io.IOException;
  * Created by gakwaya on 4/28/2016.
  */
 public class RoosterConnectionService extends Service {
-    private static final String TAG ="RoosterService";
+    private static final String TAG = "RoosterService";
 
     public static final String UI_AUTHENTICATED = "com.blikoon.rooster.uiauthenticated";
     public static final String SEND_MESSAGE = "com.blikoon.rooster.sendmessage";
@@ -38,19 +39,16 @@ public class RoosterConnectionService extends Service {
     public RoosterConnectionService() {
 
     }
-    public static RoosterConnection.ConnectionState getState()
-    {
-        if (sConnectionState == null)
-        {
+
+    public static RoosterConnection.ConnectionState getState() {
+        if (sConnectionState == null) {
             return RoosterConnection.ConnectionState.DISCONNECTED;
         }
         return sConnectionState;
     }
 
-    public static RoosterConnection.LoggedInState getLoggedInState()
-    {
-        if (sLoggedInState == null)
-        {
+    public static RoosterConnection.LoggedInState getLoggedInState() {
+        if (sLoggedInState == null) {
             return RoosterConnection.LoggedInState.LOGGED_OUT;
         }
         return sLoggedInState;
@@ -65,23 +63,19 @@ public class RoosterConnectionService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG,"onCreate()");
+        Log.d(TAG, "onCreate()");
     }
 
-    private void initConnection()
-    {
-        Log.d(TAG,"initConnection()");
-        if( mConnection == null)
-        {
+    private void initConnection() {
+        Log.d(TAG, "initConnection()");
+        if (mConnection == null) {
             mConnection = new RoosterConnection(this);
         }
-        try
-        {
+        try {
             mConnection.connect();
 
-        }catch (IOException |SmackException |XMPPException e)
-        {
-            Log.d(TAG,"Something went wrong while connecting ,make sure the credentials are right and try again");
+        } catch (IOException | SmackException | XMPPException e) {
+            Log.d(TAG, "Something went wrong while connecting ,make sure the credentials are right and try again");
             e.printStackTrace();
             //Stop the service all together.
             stopSelf();
@@ -90,14 +84,11 @@ public class RoosterConnectionService extends Service {
     }
 
 
-    public void start()
-    {
-        Log.d(TAG," Service Start() function called.");
-        if(!mActive)
-        {
+    public void start() {
+        Log.d(TAG, " Service Start() function called.");
+        if (!mActive) {
             mActive = true;
-            if( mThread ==null || !mThread.isAlive())
-            {
+            if (mThread == null || !mThread.isAlive()) {
                 mThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -118,15 +109,13 @@ public class RoosterConnectionService extends Service {
 
     }
 
-    public void stop()
-    {
-        Log.d(TAG,"stop()");
+    public void stop() {
+        Log.d(TAG, "stop()");
         mActive = false;
         mTHandler.post(new Runnable() {
             @Override
             public void run() {
-                if( mConnection != null)
-                {
+                if (mConnection != null) {
                     mConnection.disconnect();
                 }
             }
@@ -134,10 +123,9 @@ public class RoosterConnectionService extends Service {
 
     }
 
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG,"onStartCommand()");
+        Log.d(TAG, "onStartCommand()");
         start();
         return Service.START_STICKY;
         //RETURNING START_STICKY CAUSES OUR CODE TO STICK AROUND WHEN THE APP ACTIVITY HAS DIED.
@@ -145,7 +133,7 @@ public class RoosterConnectionService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d(TAG,"onDestroy()");
+        Log.d(TAG, "onDestroy()");
         super.onDestroy();
         stop();
     }

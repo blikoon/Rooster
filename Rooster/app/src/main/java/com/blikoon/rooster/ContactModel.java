@@ -13,24 +13,20 @@ public class ContactModel {
     private static ContactModel sContactModel;
     private List<Contact> mContacts;
 
-    public static ContactModel get(Context context)
-    {
-        if(sContactModel == null)
-        {
+    public static ContactModel get(Context context) {
+        if (sContactModel == null) {
             sContactModel = new ContactModel(context);
         }
-        return  sContactModel;
+        return sContactModel;
     }
 
-    private ContactModel(Context context)
-    {
+    private ContactModel(Context context) {
         mContacts = new ArrayList<>();
         populateWithInitialContacts(context);
 
     }
 
-    private void populateWithInitialContacts(Context context)
-    {
+    private void populateWithInitialContacts(Context context) {
         //Create the Foods and add them to the list;
 
         Contact contact1 = new Contact("gakwaya@salama.im");
@@ -49,8 +45,7 @@ public class ContactModel {
         mContacts.add(contact7);
     }
 
-    public List<Contact> getContacts()
-    {
+    public List<Contact> getContacts() {
         return mContacts;
     }
 
