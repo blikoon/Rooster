@@ -14,8 +14,6 @@ import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-
-import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
@@ -81,7 +79,7 @@ public class RoosterConnection implements ConnectionListener {
 
         XMPPTCPConnectionConfiguration conf = XMPPTCPConnectionConfiguration.builder()
                 .setXmppDomain(mServiceName)
-                .setHost("salama.im")
+                .setHost("conversations.im")
                 .setResource("Rooster")
 
                 //Was facing this issue
